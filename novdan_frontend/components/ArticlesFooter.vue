@@ -1,0 +1,77 @@
+<template>
+  <section class="footer">
+    <div class="background-gradient-pink">
+      <div class="container">
+        <div>
+          <p>
+            Projekt razvija <br v-if="windowWidth <= 576" />
+            <a href="https://danesjenovdan.si/" target="_blank"
+              >Danes je nov dan</a
+            >
+          </p>
+          <p>
+            <a href="mailto:novdan@danesjenovdan.si" target="_blank"
+              >novdan@danesjenovdan.si</a
+            >
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+</template>
+
+<script>
+export default {
+  props: {
+    windowWidth: {
+      type: Number,
+      default: 0,
+    },
+  },
+};
+</script>
+
+<style scoped lang="scss">
+.footer {
+  padding-bottom: 0;
+
+  .container > div {
+    margin: 3rem 30px;
+    @media (min-width: 1200px) {
+      margin: 6rem 0;
+    }
+  }
+
+  p {
+    text-align: center;
+    font-size: 1.25rem;
+    line-height: 1.5;
+
+    @media (min-width: 1200px) {
+      font-size: 2rem;
+      line-height: 1;
+    }
+
+    a {
+      color: #1103b1;
+      text-decoration: none;
+
+      &:hover {
+        text-decoration: underline;
+      }
+    }
+
+    &:first-child {
+      a {
+        font-weight: 700;
+      }
+    }
+
+    &:last-child {
+      a {
+        font-weight: 800;
+      }
+    }
+  }
+}
+</style>

@@ -1,0 +1,28 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "postgres",
+      "runtimeExecutable": "C:\\Users\\tadej\\AppData\\Local\\pgsql16\\bin\\postgres.exe",
+      "runtimeArgs": [
+        "-D",
+        "C:\\Users\\tadej\\AppData\\Local\\pgsql16-data",
+        "-p",
+        "5432"
+      ],
+      "port": 5432
+    },
+    {
+      "name": "novdan-api",
+      "runtimeExecutable": "C:\\DJND\\Piščalka\\novdan-main\\novdan_api\\run_dev.cmd",
+      "runtimeArgs": [],
+      "port": 8000
+    },
+    {
+      "name": "novdan-frontend",
+      "runtimeExecutable": "C:\\DJND\\Piščalka\\novdan-main\\novdan_frontend\\run_dev.cmd",
+      "runtimeArgs": [],
+      "port": 3000
+    }
+  ]
+}

@@ -1,0 +1,84 @@
+{% extends "admin/base_site.html" %}
+
+{% block title %}Calculate monthly split{% endblock %}
+
+{% block content %}
+
+<form>
+  <input type="date" name="date" value="{{ time|date:"Y-m-d" }}">
+  <input type="submit">
+</form>
+
+<h2>{{ time|date:"F Y" }}</h2>
+
+<br>
+<br>
+
+<p>Sum of all transactions: {{ split.sum }} tokens</p>
+<br>
+
+<p>Percentages:</p>
+
+<table style="width: 100%">
+  <tr>
+    <th width="200">Username</th>
+    <th width="200">Full name</th>
+    <th width="200">Amount</th>
+    <th width="200">Percentage</th>
+  </tr>
+  {% for percentage in split.percentages %}
+    <tr>
+      <td>{{ percentage.user.username }}</td>
+      <td>{{ percentage.user.full_name }}</td>
+      <td>{{ percentage.amount }} tokens</td>
+      <td>{% widthratio percentage.percentage 1 100 %}%</td>
+    </tr>
+  {% endfor %}
+  <tr>
+    <td></td>
+    <td></td>
+    <td>{{ split.sum }} tokens</td>
+    <td></td>
+  </tr>
+</table>
+
+<br>
+<br>
+
+{% if payout.payment_time_end %}
+
+<p>Payment time for this month will end on {{ payout.payment_time_end|date:"Y-m-d" }} at {{ payout.payment_time_end|time:"H:i" }}</p>
+
+{% else %}
+
+<p>Payed subscriptions: {{ payout.payment_count }} × {{ payout.payment_amount }} € = {{ payout.payment_sum|floatformat:"2" }} €</p>
+<br>
+
+<p>Payouts:</p>
+
+<table style="width: 100%">
+  <tr>
+    <th width="200">Username</th>
+    <th width="200">Full name</th>
+    <th width="200">Amount</th>
+    <th width="200">Percentage</th>
+  </tr>
+  {% for payout_amount in payout.payout_amounts %}
+    <tr>
+      <td>{{ payout_amount.user.username }}</td>
+      <td>{{ payout_amount.user.full_name }}</td>
+      <td>{{ payout_amount.amount|floatformat:"2" }} €</td>
+      <td>{% widthratio payout_amount.amount payout.payout_sum 100 %}%</td>
+    </tr>
+  {% endfor %}
+  <tr>
+    <td></td>
+    <td></td>
+    <td>{{ payout.payout_sum|floatformat:"2" }} € (expected: {{ payout.payment_sum|floatformat:"2" }})</td>
+    <td></td>
+  </tr>
+</table>
+
+{% endif %}
+
+{% endblock %}
