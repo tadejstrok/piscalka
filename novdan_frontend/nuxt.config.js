@@ -6,6 +6,7 @@ const OG_IMAGE = "https://novdan.si/nov-dan-og2.jpg";
 export default defineNuxtConfig({
   compatibilityDate: "2026-07-15",
   app: {
+    baseURL: process.env.NUXT_APP_BASE_URL || "/",
     head: {
       htmlAttrs: {
         lang: "sl",
@@ -86,6 +87,9 @@ export default defineNuxtConfig({
   },
   css: ["~/assets/main.scss"],
   modules: ["@nuxt/eslint"],
+  experimental: {
+    appManifest: false,
+  },
   runtimeConfig: {
     apiBase: process.env.NUXT_API_BASE,
     public: {
