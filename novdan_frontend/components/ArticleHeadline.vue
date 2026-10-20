@@ -128,6 +128,7 @@ export default {
       line-height: 1.2;
       font-weight: 700;
       text-align: left;
+      color: #dc4d35;
       margin: 0;
 
       @media (min-width: 768px) {

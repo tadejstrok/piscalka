@@ -52,16 +52,15 @@
         </div>
         <div class="disclaimer-row">
           <div class="disclaimer">
-            Neposredna finančna podpora omogoča neodvisno delovanje in prinaša
-            avtorju motivacijo za nadaljne ustvarjanje vsebin ter pomaga pri
-            pokrivanju stroškov programske in druge opreme. Za spletno
-            doniranje skrbi
+            Redna finančna podpora pokriva stroške programske in druge
+            opreme, predvsem pa prinaša motivacijo za nadaljne ustvarjanje
+            vsebin in razvoj platforme. Za spletno doniranje trenutno skrbi
             <a
               href="https://danesjenovdan.si"
               target="_blank"
               rel="noopener noreferrer"
               >Danes je nov dan</a
-            >, ves izkupiček gre avtorju.
+            >.
           </div>
           <div class="right">
             <NuxtLink
