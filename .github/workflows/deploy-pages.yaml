@@ -66,12 +66,25 @@ jobs:
           pip install -r requirements.txt
           pip install psycopg-binary==3.3.4
 
+      - name: Fetch article archive
+        run: |
+          # Older articles drop out of the RSS feed, so every run adds the
+          # fresh ones to an archive kept on the article-archive branch.
+          if git fetch --depth=1 origin article-archive; then
+            git show FETCH_HEAD:articles.json > "$RUNNER_TEMP/archive.json"
+          fi
+
       - name: Prepare database and fetch articles
         working-directory: novdan_api
         run: |
           python manage.py migrate
           python manage.py seed_piscalka --only
+          python manage.py import_articles articles/seed_data/articles_archive.json
+          if [ -f "$RUNNER_TEMP/archive.json" ]; then
+            python manage.py import_articles "$RUNNER_TEMP/archive.json"
+          fi
           python manage.py parse_articles
+          python manage.py export_articles "$RUNNER_TEMP/articles.json" --medium ppporocila
 
       - name: Start API
         working-directory: novdan_api
@@ -114,6 +127,26 @@ jobs:
           user_name: github-actions[bot]
           user_email: 41898282+github-actions[bot]@users.noreply.github.com
           commit_message: "Update static site (${{ github.event_name }}, ${{ github.sha }})"
+
+      - name: Save article archive
+        run: |
+          mkdir "$RUNNER_TEMP/archive-repo"
+          cd "$RUNNER_TEMP/archive-repo"
+          git init -q
+          git remote add origin "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git"
+          if git fetch --depth=1 origin article-archive; then
+            git checkout -q -b article-archive FETCH_HEAD
+          else
+            git checkout -q --orphan article-archive
+          fi
+          cp "$RUNNER_TEMP/articles.json" articles.json
+          git add articles.json
+          if git diff --cached --quiet; then
+            echo "Archive unchanged"
+            exit 0
+          fi
+          git -c user.name="github-actions[bot]" -c user.email="41898282+github-actions[bot]@users.noreply.github.com" commit -q -m "Update article archive"
+          git push origin article-archive
 
       - name: Show API log on failure
         if: failure()
