@@ -1,0 +1,120 @@
+name: Deploy static site to GitHub Pages
+
+on:
+  schedule:
+    - cron: "0 */4 * * *"
+  workflow_dispatch:
+  push:
+    branches:
+      - "master"
+    paths:
+      - "novdan_api/**"
+      - "novdan_frontend/**"
+      - "scripts/**"
+      - ".github/workflows/deploy-pages.yaml"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: deploy-pages
+  cancel-in-progress: false
+
+jobs:
+  build-and-deploy:
+    name: Fetch articles, build and publish
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: novdanapi
+          POSTGRES_USER: novdanapi
+          POSTGRES_PASSWORD: novdanapi
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U novdanapi"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      DJANGO_DATABASE_HOST: localhost
+      DJANGO_DATABASE_NAME: novdanapi
+      DJANGO_DATABASE_USERNAME: novdanapi
+      DJANGO_DATABASE_PASSWORD: novdanapi
+      NUXT_API_BASE: http://localhost:8000
+      NUXT_API_BASE_BROWSER: http://localhost:8000
+
+    steps:
+      - name: Check out the repo
+        uses: actions/checkout@v7
+
+      - name: Set up Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: novdan_api/requirements.txt
+
+      - name: Install backend dependencies
+        working-directory: novdan_api
+        run: |
+          pip install -r requirements.txt
+          pip install psycopg-binary==3.3.4
+
+      - name: Prepare database and fetch articles
+        working-directory: novdan_api
+        run: |
+          python manage.py migrate
+          python manage.py seed_piscalka --only
+          python manage.py parse_articles
+
+      - name: Start API
+        working-directory: novdan_api
+        run: |
+          nohup python manage.py runserver 127.0.0.1:8000 --noreload > "$RUNNER_TEMP/django.log" 2>&1 &
+          curl -sf --retry 30 --retry-connrefused --retry-delay 1 http://localhost:8000/articles/medium/ppporocila/ > /dev/null
+
+      - name: Check that articles were fetched
+        run: |
+          curl -sf "http://localhost:8000/articles/?medium__slug=ppporocila" | python -c "
+          import json, sys
+          count = json.load(sys.stdin)['count']
+          print(f'{count} articles')
+          sys.exit(0 if count > 0 else 1)
+          "
+
+      - name: Set up Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: novdan_frontend/package-lock.json
+
+      - name: Build static site
+        working-directory: novdan_frontend
+        run: |
+          npm ci
+          npx nuxt generate
+
+      - name: Make the build self-contained
+        run: python scripts/finalize_static.py novdan_frontend/.output/public novdan_api/media
+
+      - name: Publish to gh-pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: novdan_frontend/.output/public
+          publish_branch: gh-pages
+          cname: piscalka.si
+          user_name: github-actions[bot]
+          user_email: 41898282+github-actions[bot]@users.noreply.github.com
+          commit_message: "Update static site (${{ github.event_name }}, ${{ github.sha }})"
+
+      - name: Show API log on failure
+        if: failure()
+        run: cat "$RUNNER_TEMP/django.log" || true
