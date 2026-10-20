@@ -4,7 +4,7 @@
       :medium="medium"
       :supporter-amount="supporterAmount"
     />
-    <SectionArticlesAll :articles="articles" @load-more="onLoadMore" />
+    <SectionArticlesAll :articles="articles" />
     <ArticlesFooter />
   </div>
 </template>
@@ -31,13 +31,7 @@ const { data: medium, error: mediumError } = await useAsyncData(
 
 const { data: initialArticles, error: articlesError } = await useAsyncData(
   `${slug}-articles`,
-  () =>
-    $fetch("/articles/", {
-      baseURL: apiBase,
-      query: {
-        medium__slug: route.params.slug,
-      },
-    }),
+  () => fetchAllArticles(apiBase, route.params.slug),
 );
 
 if (
@@ -59,19 +53,5 @@ try {
   supporterAmount.value = podpriData?.active_monthly_subscriptions || 0;
 } catch {
   // ignore errors
-}
-
-async function onLoadMore() {
-  if (!articles.value?.next) {
-    return;
-  }
-
-  const url = new URL(articles.value.next, apiBase);
-  const nextArticles = await $fetch(url.toString());
-
-  articles.value = {
-    ...nextArticles,
-    results: articles.value.results.concat(nextArticles.results),
-  };
 }
 </script>

@@ -94,8 +94,8 @@
           </a>
         </article>
       </div>
-      <div v-if="articles?.next" class="more-articles">
-        <button type="button" @click="$emit('load-more')">Več</button>
+      <div v-if="hasMore" class="more-articles">
+        <button type="button" @click="visibleCount += PAGE_SIZE">Več</button>
       </div>
     </div>
   </section>
@@ -105,8 +105,9 @@
 import PreferHttpsImage from "./PreferHttpsImage.vue";
 
 const CATEGORY_PPP = "Petkova Propagandna Poročila";
-const CATEGORY_TALK = "Posebni Propagandni Pogovori";
+const CATEGORY_TALK = "Poseben Propagandni Pogovor";
 const CATEGORY_SHORT = "Kratke vsebine";
+const PAGE_SIZE = 12;
 const NEW_WINDOW_MS = 1000 * 60 * 60 * 48;
 
 export default {
@@ -120,12 +121,13 @@ export default {
       required: true,
     },
   },
-  emits: ["load-more"],
   data() {
     return {
       filters: [CATEGORY_PPP, CATEGORY_TALK, CATEGORY_SHORT],
       activeFilter: null,
       failedShorts: {},
+      visibleCount: PAGE_SIZE,
+      PAGE_SIZE,
     };
   },
   computed: {
@@ -138,31 +140,40 @@ export default {
         (article) => this.categorize(article) === this.activeFilter,
       );
     },
+    hasMore() {
+      return this.filteredResults.length > this.visibleCount;
+    },
     items() {
       let lastDate = null;
       const now = Date.now();
-      return this.filteredResults.map((article, index) => {
-        const date = new Date(article.published_at).toISOString().split("T")[0];
-        const firstNewDate = date !== lastDate;
-        lastDate = date;
-        const category = this.categorize(article);
-        return {
-          ...article,
-          firstNewDate,
-          isNewest: index === 0,
-          isNew: now - new Date(article.published_at).getTime() < NEW_WINDOW_MS,
-          categoryKey: this.categoryKey(category),
-          tagLabel: this.tagLabel(article, category),
-          shortImage: this.shortImage(article),
-          excerpt: this.excerpt(article),
-          source: this.source(article),
-        };
-      });
+      return this.filteredResults
+        .slice(0, this.visibleCount)
+        .map((article, index) => {
+          const date = new Date(article.published_at)
+            .toISOString()
+            .split("T")[0];
+          const firstNewDate = date !== lastDate;
+          lastDate = date;
+          const category = this.categorize(article);
+          return {
+            ...article,
+            firstNewDate,
+            isNewest: index === 0,
+            isNew:
+              now - new Date(article.published_at).getTime() < NEW_WINDOW_MS,
+            categoryKey: this.categoryKey(category),
+            tagLabel: this.tagLabel(article, category),
+            shortImage: this.shortImage(article),
+            excerpt: this.excerpt(article),
+            source: this.source(article),
+          };
+        });
     },
   },
   methods: {
     setFilter(filter) {
       this.activeFilter = filter;
+      this.visibleCount = PAGE_SIZE;
     },
     categorize(article) {
       const title = article.title || "";

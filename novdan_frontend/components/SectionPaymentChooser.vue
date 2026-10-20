@@ -21,9 +21,6 @@
             >
           </div>
         </div>
-        <p v-if="type !== 'recurring'" class="hint">
-          Izberi višino enkratne podpore.
-        </p>
         <div class="amount-buttons">
           <template v-for="da in donationAmounts">
             <button
@@ -189,12 +186,6 @@ export default {
         box-shadow: inset 0 0 0 3px var(--red);
       }
     }
-  }
-
-  .hint {
-    margin: 1rem 0 0;
-    font-size: 1.125rem;
-    font-weight: 600;
   }
 
   .amount-buttons {
