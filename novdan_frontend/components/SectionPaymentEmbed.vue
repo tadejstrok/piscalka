@@ -53,7 +53,7 @@ export default {
 
 <style scoped lang="scss">
 .embed {
-  color: #000;
+  color: var(--ink);
 
   .payment-frame {
     width: 100%;

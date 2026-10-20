@@ -1,41 +1,43 @@
 <template>
-  <section class="chooser">
+  <section id="podpora" class="chooser">
     <div class="container">
       <div>
-        <div class="mission-text">
-          Ustvarjamo informativne vsebine z upanjem v boljši svet. Gradimo
-          neodvisno alternativo obstoječemu medijskemu ekosistemu. Našo
-          neodvisnost zagotavljate podporniki.
+        <div class="head">
+          <h2>Postani podpornik</h2>
+          <div class="toggle" role="group" aria-label="Pogostost podpore">
+            <NuxtLink
+              class="toggle-option"
+              :class="{ active: type === 'recurring' }"
+              :aria-current="type === 'recurring' ? 'true' : undefined"
+              to="?enkratno=false"
+              >Mesečno</NuxtLink
+            >
+            <NuxtLink
+              class="toggle-option"
+              :class="{ active: type === 'one_time' }"
+              :aria-current="type === 'one_time' ? 'true' : undefined"
+              to="?enkratno=true"
+              >Enkratno</NuxtLink
+            >
+          </div>
         </div>
-        <div class="subheadline">
-          <h2>POSTANI PODPORNIK</h2>
-          <p v-if="type !== 'recurring'">Izberi višino enkratne podpore.</p>
-        </div>
+        <p v-if="type !== 'recurring'" class="hint">
+          Izberi višino enkratne podpore.
+        </p>
         <div class="amount-buttons">
           <template v-for="da in donationAmounts">
             <button
               v-if="Number(da.amount) > 0"
               :key="da.id"
+              type="button"
               @click.prevent="
                 $router.push(`/${medium.slug}/podpri?${queryString(da.amount)}`)
               "
             >
-              <div v-if="da.image">
-                <img
-                  :src="da.image"
-                  alt=""
-                  style="
-                    max-width: 100%;
-                    max-height: 120px;
-                    object-fit: contain;
-                  "
-                />
-              </div>
-              <div v-if="da.name">
-                {{ da.name }}
-              </div>
-              <div class="amount">{{ Number(da.amount) }}&nbsp;€</div>
-              <div v-if="type === 'recurring'" class="period">/mesec</div>
+              <img v-if="da.image" class="tier-image" :src="da.image" alt="" />
+              <span v-if="da.name" class="name">{{ da.name }}</span>
+              <span class="amount">{{ Number(da.amount) }}&nbsp;€</span>
+              <span v-if="type === 'recurring'" class="period">na mesec</span>
             </button>
             <div
               v-else-if="Number(da.amount) === -1"
@@ -43,42 +45,32 @@
               class="button"
               @click.prevent="focusInput"
             >
-              <div>{{ da.name || "Poljubni znesek" }}</div>
+              <span class="name">{{ da.name || "Poljubni znesek" }}</span>
               <form class="amount" @submit.prevent="continueWithCustomAmount">
                 <input v-model="customAmount" type="number" />&nbsp;€
               </form>
             </div>
           </template>
         </div>
-        <div class="disclaimer-row">
-          <div class="disclaimer">
-            Redna finančna podpora pokriva stroške programske in druge
-            opreme, predvsem pa prinaša motivacijo za nadaljne ustvarjanje
-            vsebin in razvoj platforme. Za spletno doniranje trenutno skrbi
+        <div class="fine-print">
+          <p class="disclaimer">
+            Redna finančna podpora pokriva stroške programske in druge opreme,
+            predvsem pa prinaša motivacijo za nadaljnje ustvarjanje vsebin in
+            razvoj platforme. Za spletno doniranje trenutno skrbi
             <a
               href="https://danesjenovdan.si"
               target="_blank"
               rel="noopener noreferrer"
               >Danes je nov dan</a
             >.
-          </div>
-          <div class="right">
-            <NuxtLink
-              v-if="type === 'recurring'"
-              class="link"
-              to="?enkratno=true"
-              >Želim donirati enkraten znesek</NuxtLink
-            >
-            <NuxtLink v-else class="link" to="?enkratno=false"
-              >Želim donirati mesečno</NuxtLink
-            >
-            <a class="link" href="#" @click.prevent="cancelSupport"
-              >Prekini podporo</a
-            >
-          </div>
+          </p>
+          <a class="link" href="#" @click.prevent="cancelSupport"
+            >Prekini podporo</a
+          >
         </div>
         <div v-if="customAmount && customAmount > 0" class="continue-button">
           <button
+            type="button"
             :disabled="!customAmount || customAmount <= 0"
             @click.prevent="continueWithCustomAmount"
           >
@@ -155,131 +147,144 @@ export default {
 
 <style scoped lang="scss">
 .chooser {
-  padding-top: 1.75rem;
+  padding-top: 3rem;
   margin-bottom: 2rem;
-  border-top: 2px solid #dc4d35;
-  font-family:
-    system-ui,
-    -apple-system,
-    "Segoe UI",
-    Roboto,
-    "Helvetica Neue",
-    "Noto Sans",
-    "Liberation Sans",
-    Arial,
-    sans-serif,
-    "Apple Color Emoji",
-    "Segoe UI Emoji",
-    "Segoe UI Symbol",
-    "Noto Color Emoji";
+  scroll-margin-top: 1rem;
 
   a {
     color: inherit;
   }
 
-  .mission-text {
-    max-width: 800px;
-    margin: 0 auto 1.5rem;
-    font-size: 1.25rem;
-    font-weight: 600;
-    text-align: center;
-
-    @media (min-width: 768px) {
-      font-size: 1.5rem;
-    }
-  }
-
-  .subheadline {
-    font-size: 1.25rem;
-    text-align: center;
-
-    @media (min-width: 768px) {
-      font-size: 1.5rem;
-    }
+  .head {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: 1rem 2rem;
 
     h2 {
       margin: 0;
-    }
-
-    p {
-      margin-block: 1rem;
-    }
-  }
-
-  .disclaimer-row {
-    display: flex;
-    flex-direction: column;
-    text-align: center;
-
-    @media (min-width: 768px) {
-      flex-direction: row;
-      text-align: left;
-    }
-
-    .right {
-      flex-shrink: 0;
-      margin-block: 0.25rem;
-      display: flex;
-      gap: 0.25rem;
-      flex-direction: column;
-      align-items: center;
-      text-align: center;
-      font-size: 1.125rem;
+      font-weight: 900;
+      font-size: 3rem;
+      line-height: 0.92;
+      text-transform: uppercase;
 
       @media (min-width: 768px) {
-        margin-left: 1.5rem;
-        align-items: flex-end;
-        text-align: right;
+        font-size: 4.5rem;
       }
     }
   }
 
+  .toggle {
+    display: flex;
+    border: 2px solid var(--ink);
+    border-radius: 12px;
+    overflow: hidden;
+    background: var(--paper);
+
+    .toggle-option {
+      padding: 0.75rem 1.5rem;
+      color: var(--ink);
+      font-size: 1.0625rem;
+      font-weight: 700;
+      text-decoration: none;
+
+      &.active {
+        background: var(--ink);
+        color: var(--paper);
+      }
+
+      &:focus-visible {
+        box-shadow: inset 0 0 0 3px var(--red);
+      }
+    }
+  }
+
+  .hint {
+    margin: 1rem 0 0;
+    font-size: 1.125rem;
+    font-weight: 600;
+  }
+
   .amount-buttons {
-    margin-block: 1rem 2rem;
+    margin-block: 1.75rem 2.25rem;
     display: grid;
-    grid-template-columns: 1fr 1fr;
-    justify-content: center;
-    gap: 1rem;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1.25rem;
 
     @media (min-width: 768px) {
-      display: flex;
-      justify-content: center;
-      gap: 1rem;
+      gap: 1.5rem;
+    }
+
+    @media (min-width: 992px) {
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
     }
 
     button,
     .button {
-      flex: 1;
-      background-color: #fff;
-      border: none;
-      border-radius: 0.5rem;
-      color: #000;
+      background: var(--paper);
+      border: 2px solid var(--ink);
+      border-radius: 16px;
+      box-shadow: 6px 6px 0 var(--ink);
+      color: var(--ink);
       font: inherit;
-      font-size: 1.25rem;
-      font-weight: 700;
+      padding: 1.5rem 1.25rem 1.25rem;
       text-align: center;
-      padding: 0.75rem 1rem;
       cursor: pointer;
-      transition: background-color 0.3s ease;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.25rem;
+      transition:
+        transform 0.12s ease,
+        box-shadow 0.12s ease,
+        background-color 0.12s ease;
 
-      @media (min-width: 768px) {
-        padding: 1.75rem 1.5rem;
-        font-size: 1.5rem;
+      &:hover,
+      &:focus-visible {
+        background: var(--red-tint);
+        transform: translate(-3px, -3px);
+        box-shadow: 9px 9px 0 var(--red);
       }
 
-      &:hover {
-        background-color: #e0e0e0;
+      &:focus-visible {
+        outline: 3px solid var(--ink);
+        outline-offset: 3px;
+      }
+
+      &:active {
+        transform: translate(0, 0);
+        box-shadow: 3px 3px 0 var(--ink);
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        transition: none;
+      }
+
+      .tier-image {
+        height: 5.5rem;
+        width: auto;
+        max-width: 100%;
+        object-fit: contain;
+      }
+
+      .name {
+        margin-top: 0.5rem;
+        font-size: 1.125rem;
+        font-weight: 700;
       }
 
       .amount {
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 2rem;
+        font-stretch: 62%;
+        font-size: 3.5rem;
         font-weight: 800;
+        line-height: 1;
 
         @media (min-width: 768px) {
-          font-size: 3rem;
+          font-size: 4.5rem;
         }
 
         input::-webkit-outer-spin-button,
@@ -301,21 +306,55 @@ export default {
           font: inherit;
           font-size: inherit;
           font-weight: 700;
-          border: 1px solid #000;
+          color: var(--ink);
+          background: #fff;
+          border: 2px solid var(--ink);
           border-radius: 0.5rem;
           text-align: center;
 
           &:focus-visible {
-            outline: 4px solid #dc4d35;
+            outline: 3px solid var(--red);
           }
         }
       }
 
       .period {
-        font-size: 1rem;
-        line-height: 1;
-        font-weight: 600;
+        font-size: 0.9375rem;
+        color: var(--ink-soft);
       }
+    }
+  }
+
+  .fine-print {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+
+    @media (min-width: 768px) {
+      flex-direction: row;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 2rem;
+    }
+
+    .disclaimer {
+      margin: 0;
+      max-width: 780px;
+      font-size: 1rem;
+      line-height: 1.55;
+      color: var(--ink-soft);
+
+      a {
+        color: var(--red-text);
+        font-weight: 700;
+      }
+    }
+
+    .link {
+      flex-shrink: 0;
+      color: var(--ink-soft);
+      font-size: 0.9375rem;
+      text-decoration: underline;
     }
   }
 
@@ -324,36 +363,27 @@ export default {
     text-align: center;
 
     button {
-      flex: 1;
-      background-color: #fff;
-      border: none;
-      border-radius: 0.5rem;
-      color: #000;
+      padding: 0.875rem 2.5rem;
+      background: var(--red-text);
+      color: var(--paper);
+      border: 2px solid var(--ink);
+      border-radius: 12px;
+      box-shadow: 4px 4px 0 var(--ink);
       font: inherit;
-      font-size: 1.5rem;
-      font-weight: 700;
-      text-align: center;
-      padding: 0.75rem 2.5rem;
+      font-size: 1.1875rem;
+      font-weight: 800;
       cursor: pointer;
-      transition: background-color 0.3s ease;
 
-      &:hover {
-        background-color: #e0e0e0;
+      &:focus-visible {
+        outline: 3px solid var(--ink);
+        outline-offset: 3px;
       }
 
       &:disabled {
-        background-color: #cccccc;
+        background: #ccc;
+        color: var(--ink);
         cursor: not-allowed;
       }
-    }
-  }
-
-  .disclaimer {
-    flex: 1;
-    font-size: 1rem;
-
-    @media (min-width: 768px) {
-      font-size: 1.125rem;
     }
   }
 }

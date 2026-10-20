@@ -42,12 +42,13 @@ export default {};
     }
 
     p {
-      font-family: 'wf-archivo-extracondensed', sans-serif;
+      font-family: "Archivo", sans-serif;
+      font-stretch: 62%;
       font-size: 1.5rem;
       line-height: 1.2;
       font-weight: 700;
       text-align: left;
-      color: #dc4d35;
+      color: var(--ink);
       margin: 0;
 
       @media (min-width: 768px) {

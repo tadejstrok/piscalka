@@ -187,7 +187,7 @@ export default {
   padding: 0 1rem 2rem;
 
   > .container {
-    border-top: 2px solid #dc4d35;
+    border-top: 2px solid var(--red);
     padding-top: 2rem;
   }
 
@@ -219,7 +219,7 @@ export default {
     margin-bottom: 1.5rem;
     font-size: 1.5rem;
     font-weight: 800;
-    color: #000;
+    color: var(--ink);
 
     @media (min-width: 992px) {
       font-size: 2rem;
@@ -236,8 +236,8 @@ export default {
   }
 
   hr {
-    background-color: #dc4d35;
-    border-color: #dc4d35;
+    background-color: var(--red);
+    border-color: var(--red);
     width: 8rem;
     margin: 0;
   }
@@ -250,12 +250,12 @@ export default {
 
     button {
       background-color: transparent;
-      border: 2px solid #dc4d35;
+      border: 2px solid var(--red-text);
       border-radius: 999px;
       padding: 0.4rem 1.25rem;
       font-size: 1rem;
       font-weight: 600;
-      color: #dc4d35;
+      color: var(--red-text);
       cursor: pointer;
       transition: all 0.2s ease-in-out;
 
@@ -264,8 +264,8 @@ export default {
       }
 
       &.active {
-        background-color: #dc4d35;
-        color: #fff;
+        background-color: var(--red-text);
+        color: var(--paper);
       }
     }
   }
@@ -278,13 +278,13 @@ export default {
     display: flex;
     gap: 1.5rem;
     align-items: center;
-    color: #dc4d35;
+    color: var(--red-text);
     margin-inline: -2rem;
 
     .date {
       margin-left: 0.5rem;
       padding-left: 1.5rem;
-      background: #dbe3ef;
+      background: var(--ground);
       font-size: 1rem;
       font-weight: 500;
     }
@@ -320,7 +320,7 @@ export default {
       display: block;
       margin-top: 1rem;
       text-decoration: none;
-      color: #000;
+      color: var(--ink);
 
       &:hover {
         h5 {
@@ -336,7 +336,7 @@ export default {
         height: auto;
         object-fit: cover;
         background-color: #fff;
-        border: 1px solid #dc4d35;
+        border: 1px solid var(--red);
         border-radius: 4px;
       }
 
@@ -398,13 +398,13 @@ export default {
     text-align: center;
 
     button {
-      background-color: #dc4d35;
+      background-color: var(--red-text);
       border: none;
       border-radius: 4px;
       padding: 0.5rem 2rem;
       font-size: 1.25rem;
       font-weight: 600;
-      color: #000;
+      color: var(--paper);
       cursor: pointer;
       transition: background-color 0.2s ease-in-out;
 

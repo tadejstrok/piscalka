@@ -88,7 +88,7 @@ onBeforeUnmount(() => {
 <style scoped lang="scss">
 .main-text {
   padding: 4rem 0;
-  color: #000;
+  color: var(--ink);
 
   .main-text-wrapper {
     max-width: 900px;
@@ -107,7 +107,7 @@ onBeforeUnmount(() => {
   }
 
   a {
-    color: #000;
+    color: var(--ink);
     text-decoration: underline;
   }
 }

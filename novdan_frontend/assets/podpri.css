@@ -1,12 +1,12 @@
 body,
 .page {
   background: #dbe3ef;
-  color: #000;
+  color: #141b2d;
 }
 
 body .page ::selection {
-  background: #dc4d35;
-  color: #000;
+  background: #ee3d26;
+  color: #141b2d;
 }
 
 .page .checkout-stage .language-switcher button {
@@ -25,14 +25,14 @@ body .page ::selection {
 }
 
 .page .checkout-stage .donation-option:focus .donation-option__content-wrapper {
-  border: 4px solid #dc4d35;
+  border: 4px solid #ee3d26;
 }
 
 .page
   .checkout-stage
   .donation-option.donation-option--selected
   .donation-option__content-wrapper {
-  border: 4px solid #dc4d35;
+  border: 4px solid #ee3d26;
 }
 
 .page
@@ -91,7 +91,7 @@ body .page ::selection {
   ~ .custom-control-label::before,
 .page .checkout-stage .form-control:focus {
   border-color: #000;
-  box-shadow: 0 0 0 0.2rem #dc4d35;
+  box-shadow: 0 0 0 0.2rem #ee3d26;
 }
 
 .page .checkout-stage .confirm-button {
@@ -100,7 +100,7 @@ body .page ::selection {
 }
 
 .page .checkout-stage .confirm-button .text {
-  color: #000;
+  color: #141b2d;
 }
 
 .page .checkout-stage .confirm-button .arrow svg,
@@ -114,7 +114,7 @@ body .page ::selection {
 
 .page .checkout-stage .payment-switcher .nav .nav-item .nav-link.active {
   background-color: #fff;
-  color: #000;
+  color: #141b2d;
 }
 
 .page .checkout-stage .language-switcher {
@@ -131,7 +131,7 @@ body .page ::selection {
 
 .page .checkout-stage .payment-container .cart-total {
   background-color: #fff;
-  color: #000;
+  color: #141b2d;
   border-radius: 4px;
 }
 
