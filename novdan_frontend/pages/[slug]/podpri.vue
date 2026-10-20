@@ -10,12 +10,12 @@
       :type="paymentType"
       :amount="amount"
     />
-    <ArticlesFooter :window-width="windowWidth" />
+    <ArticlesFooter />
   </div>
 </template>
 
 <script setup>
-import { onBeforeUnmount, onMounted, ref } from "vue";
+import { ref } from "vue";
 import ArticleHeadlineMedium from "../../components/ArticleHeadlineMedium.vue";
 import SectionPaymentEmbed from "../../components/SectionPaymentEmbed.vue";
 import ArticlesFooter from "../../components/ArticlesFooter.vue";
@@ -23,7 +23,6 @@ import ArticlesFooter from "../../components/ArticlesFooter.vue";
 const config = useRuntimeConfig();
 const apiBase = import.meta.server ? config.apiBase : config.public?.apiBase;
 const route = useRoute();
-const windowWidth = ref(0);
 
 const slug = encodeURIComponent(String(route.params.slug || ""));
 const paymentType = route.query.enkratno === "true" ? "one_time" : "recurring";
@@ -54,17 +53,4 @@ try {
 } catch {
   // ignore errors
 }
-
-function updateWindowWidth() {
-  windowWidth.value = window.innerWidth;
-}
-
-onMounted(() => {
-  updateWindowWidth();
-  window.addEventListener("resize", updateWindowWidth);
-});
-
-onBeforeUnmount(() => {
-  window.removeEventListener("resize", updateWindowWidth);
-});
 </script>

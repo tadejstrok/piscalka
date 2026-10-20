@@ -5,12 +5,12 @@
       :supporter-amount="supporterAmount"
     />
     <SectionArticlesAll :articles="articles" @load-more="onLoadMore" />
-    <ArticlesFooter :window-width="windowWidth" />
+    <ArticlesFooter />
   </div>
 </template>
 
 <script setup>
-import { onBeforeUnmount, onMounted, ref } from "vue";
+import { ref } from "vue";
 import ArticleHeadlineMedium from "../../components/ArticleHeadlineMedium.vue";
 import SectionArticlesAll from "../../components/SectionArticlesAll.vue";
 import ArticlesFooter from "../../components/ArticlesFooter.vue";
@@ -18,7 +18,6 @@ import ArticlesFooter from "../../components/ArticlesFooter.vue";
 const config = useRuntimeConfig();
 const apiBase = import.meta.server ? config.apiBase : config.public?.apiBase;
 const route = useRoute();
-const windowWidth = ref(0);
 
 const slug = encodeURIComponent(String(route.params.slug || ""));
 
@@ -61,19 +60,6 @@ try {
 } catch {
   // ignore errors
 }
-
-function updateWindowWidth() {
-  windowWidth.value = window.innerWidth;
-}
-
-onMounted(() => {
-  updateWindowWidth();
-  window.addEventListener("resize", updateWindowWidth);
-});
-
-onBeforeUnmount(() => {
-  window.removeEventListener("resize", updateWindowWidth);
-});
 
 async function onLoadMore() {
   if (!articles.value?.next) {

@@ -60,29 +60,13 @@
         </div>
       </div>
     </section>
-    <ArticlesFooter :window-width="windowWidth" />
+    <ArticlesFooter />
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted, onBeforeUnmount } from "vue";
 import SupportHeadline from "../../components/SupportHeadline.vue";
 import ArticlesFooter from "../../components/ArticlesFooter.vue";
-
-const windowWidth = ref(0);
-
-function updateWindowWidth() {
-  windowWidth.value = window.innerWidth;
-}
-
-onMounted(() => {
-  updateWindowWidth();
-  window.addEventListener("resize", updateWindowWidth);
-});
-
-onBeforeUnmount(() => {
-  window.removeEventListener("resize", updateWindowWidth);
-});
 </script>
 
 <style scoped lang="scss">

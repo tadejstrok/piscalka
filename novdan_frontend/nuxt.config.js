@@ -1,7 +1,7 @@
-const OG_TITLE = "Nov dan – podpiraj neodvisne medijske ustvarjalce";
+const OG_TITLE = "Piščalka – medijska platforma na ljudski pogon";
 const OG_DESCRIPTION =
-  "Najnovejše objave neodvisnih medijskih ustvarjalcev na enem mestu. Spremljaj, podpiraj in izboljšaj svojo medijsko dieto.";
-const OG_IMAGE = "https://novdan.si/nov-dan-og2.jpg";
+  "Ustvarjamo informativne vsebine z upanjem v boljši svet. Gradimo neodvisno alternativo obstoječemu medijskemu ekosistemu. Našo neodvisnost zagotavljate podporniki.";
+const OG_IMAGE = "https://piscalka.si/og.png";
 
 export default defineNuxtConfig({
   compatibilityDate: "2026-07-15",
@@ -59,8 +59,14 @@ export default defineNuxtConfig({
         },
       ],
       link: [
-        { rel: "icon", type: "image/svg+xml", href: "/favicon.svg" },
-        { rel: "alternate icon", href: "/favicon.ico" },
+        { rel: "icon", href: "/favicon.ico", sizes: "any" },
+        {
+          rel: "icon",
+          type: "image/png",
+          sizes: "192x192",
+          href: "/icon-192.png",
+        },
+        { rel: "apple-touch-icon", href: "/apple-touch-icon.png" },
         { rel: "stylesheet", href: "/fonts/selfhosted.css" },
         {
           rel: "alternate",

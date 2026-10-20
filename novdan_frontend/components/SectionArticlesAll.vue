@@ -1,70 +1,101 @@
 <template>
   <section class="background-black articles">
     <div class="container">
-      <div>
-        <div>
-          <div class="filters">
-            <button
-              v-for="filter in filters"
-              :key="filter"
-              type="button"
-              :class="{ active: activeFilter === filter }"
-              @click="toggleFilter(filter)"
+      <h2>Vsebine</h2>
+      <div class="filters" role="group" aria-label="Filter vsebin">
+        <button
+          type="button"
+          :class="{ active: activeFilter === null }"
+          :aria-pressed="activeFilter === null"
+          @click="setFilter(null)"
+        >
+          Vse
+        </button>
+        <button
+          v-for="filter in filters"
+          :key="filter"
+          type="button"
+          :class="{ active: activeFilter === filter }"
+          :aria-pressed="activeFilter === filter"
+          @click="setFilter(filter)"
+        >
+          {{ filter }}
+        </button>
+      </div>
+      <div class="article-list">
+        <article v-for="article in items" :key="article.id" class="card">
+          <div class="kicker" :class="{ 'is-spacer': !article.firstNewDate }">
+            <svg
+              v-if="article.isNewest"
+              class="ornament"
+              viewBox="0 0 90 64"
+              width="26"
+              height="18"
+              aria-hidden="true"
             >
-              {{ filter }}
-            </button>
-          </div>
-          <div class="date-articles">
-            <div class="article-list">
-              <div
-                v-for="article in articlesWithFirstNewDate"
-                :key="article.id"
+              <g
+                stroke="currentColor"
+                stroke-width="10"
+                stroke-linecap="round"
+                fill="none"
               >
-                <div
-                  :class="{
-                    'date-line': true,
-                    'only-line': !article.firstNewDate,
-                  }"
-                >
-                  <span class="date">{{
-                    article.firstNewDate
-                      ? formatLongDate(article.published_at)
-                      : "&nbsp;"
-                  }}</span>
-                  <hr />
-                </div>
-                <a :href="article.url" target="_blank" class="article">
-                  <div class="medium-and-date">
-                    <p>
-                      <img
-                        :src="article.medium.icon_url"
-                        :alt="article.medium.name"
-                        class="favicon"
-                      />
-                      <span>{{ article.medium.name }}</span>
-                    </p>
-                    <small :title="article.published_at">{{
-                      formatRelativeTime(article.published_at)
-                    }}</small>
-                  </div>
-                  <PreferHttpsImage
-                    :src="article.image_url"
-                    :alt="`Image for ${article.title}`"
-                  />
-                  <h5>{{ article.title }}</h5>
-                  <p class="line-clamp-4">
-                    {{ article.description }}
-                  </p>
-                </a>
-              </div>
+                <path d="M26 50 L10 22" />
+                <path d="M45 48 L42 10" />
+                <path d="M64 50 L76 18" />
+              </g>
+            </svg>
+            <span class="date">{{
+              article.firstNewDate
+                ? formatLongDate(article.published_at)
+                : "&nbsp;"
+            }}</span>
+            <span class="rule"></span>
+          </div>
+          <a
+            :href="article.url"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="card-link"
+          >
+            <div class="thumb">
+              <template v-if="article.shortImage">
+                <img
+                  class="thumb-bg"
+                  :src="article.shortImage"
+                  alt=""
+                  @error="onShortError(article.id)"
+                />
+                <img
+                  class="thumb-portrait"
+                  :src="article.shortImage"
+                  :alt="`Sličica: ${article.title}`"
+                  @error="onShortError(article.id)"
+                />
+              </template>
+              <PreferHttpsImage
+                v-else
+                class="thumb-img"
+                :src="article.image_url"
+                :alt="`Sličica: ${article.title}`"
+              />
+              <span class="tag" :class="`tag-${article.categoryKey}`">{{
+                article.tagLabel
+              }}</span>
+              <span v-if="article.isNew" class="tag tag-new">Novo</span>
             </div>
-          </div>
-          <div v-if="articles?.next" class="more-articles">
-            <button type="button" @click="$emit('load-more')">
-              <span>Več →</span>
-            </button>
-          </div>
-        </div>
+            <h3>{{ article.title }}</h3>
+            <p v-if="article.excerpt" class="excerpt">{{ article.excerpt }}</p>
+            <p class="meta">
+              <span :title="article.published_at">{{
+                formatRelativeTime(article.published_at)
+              }}</span>
+              <template v-if="article.source"> · {{ article.source }}</template>
+            </p>
+          </a>
+        </article>
+      </div>
+      <div v-if="articles?.next" class="more-articles">
+        <button type="button" @click="$emit('load-more')">Več</button>
       </div>
     </div>
   </section>
@@ -72,6 +103,11 @@
 
 <script>
 import PreferHttpsImage from "./PreferHttpsImage.vue";
+
+const CATEGORY_PPP = "Petkova Propagandna Poročila";
+const CATEGORY_TALK = "Posebni Propagandni Pogovori";
+const CATEGORY_SHORT = "Kratke vsebine";
+const NEW_WINDOW_MS = 1000 * 60 * 60 * 48;
 
 export default {
   name: "SectionArticlesAll",
@@ -87,12 +123,9 @@ export default {
   emits: ["load-more"],
   data() {
     return {
-      filters: [
-        "Petkova Propagandna Poročila",
-        "Posebni Propagandni Pogovori",
-        "Kratke vsebine",
-      ],
+      filters: [CATEGORY_PPP, CATEGORY_TALK, CATEGORY_SHORT],
       activeFilter: null,
+      failedShorts: {},
     };
   },
   computed: {
@@ -105,41 +138,88 @@ export default {
         (article) => this.categorize(article) === this.activeFilter,
       );
     },
-    articlesWithFirstNewDate() {
+    items() {
       let lastDate = null;
-      return this.filteredResults.map((article) => {
+      const now = Date.now();
+      return this.filteredResults.map((article, index) => {
         const date = new Date(article.published_at).toISOString().split("T")[0];
-        if (date !== lastDate) {
-          lastDate = date;
-          return {
-            ...article,
-            firstNewDate: true,
-          };
-        }
-        return article;
+        const firstNewDate = date !== lastDate;
+        lastDate = date;
+        const category = this.categorize(article);
+        return {
+          ...article,
+          firstNewDate,
+          isNewest: index === 0,
+          isNew: now - new Date(article.published_at).getTime() < NEW_WINDOW_MS,
+          categoryKey: this.categoryKey(category),
+          tagLabel: this.tagLabel(article, category),
+          shortImage: this.shortImage(article),
+          excerpt: this.excerpt(article),
+          source: this.source(article),
+        };
       });
     },
   },
   methods: {
-    toggleFilter(filter) {
-      this.activeFilter = this.activeFilter === filter ? null : filter;
+    setFilter(filter) {
+      this.activeFilter = filter;
     },
     categorize(article) {
       const title = article.title || "";
       if (/^PPP\s*#/i.test(title)) {
-        return "Petkova Propagandna Poročila";
+        return CATEGORY_PPP;
       }
       if (/^Poseben propagandni pogovor/i.test(title)) {
-        return "Posebni Propagandni Pogovori";
+        return CATEGORY_TALK;
       }
-      return "Kratke vsebine";
+      return CATEGORY_SHORT;
     },
-    formatDate(date) {
-      return Intl.DateTimeFormat("sl-SI", {
-        year: "numeric",
-        month: "long",
-        day: "numeric",
-      }).format(new Date(date));
+    categoryKey(category) {
+      if (category === CATEGORY_PPP) {
+        return "ppp";
+      }
+      if (category === CATEGORY_TALK) {
+        return "talk";
+      }
+      return "short";
+    },
+    tagLabel(article, category) {
+      if (category === CATEGORY_PPP) {
+        const match = (article.title || "").match(/^PPP\s*#\s*(\d+)/i);
+        return match ? `PPP #${match[1]}` : "PPP";
+      }
+      if (category === CATEGORY_TALK) {
+        return "Pogovor";
+      }
+      return "Kratko";
+    },
+    shortImage(article) {
+      if (this.failedShorts[article.id]) {
+        return null;
+      }
+      const match = (article.url || "").match(/\/shorts\/([\w-]+)/);
+      return match ? `https://i.ytimg.com/vi/${match[1]}/oar2.jpg` : null;
+    },
+    onShortError(id) {
+      this.failedShorts = { ...this.failedShorts, [id]: true };
+    },
+    excerpt(article) {
+      const text = (article.description || "")
+        .split("-------")[0]
+        .replace(/https?:\/\/(www\.)?/gi, "")
+        .replace(/\s+/g, " ")
+        .trim();
+      if (!text || text === (article.title || "").trim()) {
+        return "";
+      }
+      return text;
+    },
+    source(article) {
+      try {
+        return new URL(article.url).hostname.replace(/^www\./, "");
+      } catch {
+        return "";
+      }
     },
     formatLongDate(date) {
       return Intl.DateTimeFormat("sl-SI", {
@@ -184,12 +264,7 @@ export default {
 
 <style scoped lang="scss">
 .articles {
-  padding: 0 1rem 2rem;
-
-  > .container {
-    border-top: 2px solid var(--red);
-    padding-top: 2rem;
-  }
+  padding: 4.5rem 1rem 2rem;
 
   @media (min-width: 576px) {
     padding-inline: 2rem;
@@ -199,113 +274,52 @@ export default {
     padding-inline: 0;
   }
 
-  h1 {
-    font-size: 2rem;
-    font-weight: 800;
-    margin-top: 2rem;
-    margin-bottom: 2rem;
-    color: #ff5ccb;
+  h2 {
+    margin: 0 0 1.5rem;
+    font-weight: 900;
+    font-size: 3rem;
+    line-height: 0.92;
+    text-transform: uppercase;
 
-    @media (min-width: 992px) {
-      font-size: 6rem;
+    @media (min-width: 768px) {
+      font-size: 4.5rem;
     }
-
-    @media (min-width: 1200px) {
-      font-size: 8rem;
-    }
-  }
-
-  h4 {
-    margin-bottom: 1.5rem;
-    font-size: 1.5rem;
-    font-weight: 800;
-    color: var(--ink);
-
-    @media (min-width: 992px) {
-      font-size: 2rem;
-    }
-
-    a {
-      color: inherit;
-      text-decoration: none;
-
-      &:hover {
-        text-decoration: underline;
-      }
-    }
-  }
-
-  hr {
-    background-color: var(--red);
-    border-color: var(--red);
-    width: 8rem;
-    margin: 0;
   }
 
   .filters {
     display: flex;
     flex-wrap: wrap;
     gap: 0.75rem;
-    margin-bottom: 1.5rem;
+    margin-bottom: 2.5rem;
 
     button {
-      background-color: transparent;
-      border: 2px solid var(--red-text);
+      padding: 0.5rem 1.25rem;
+      background: transparent;
+      border: 2px solid var(--ink);
       border-radius: 999px;
-      padding: 0.4rem 1.25rem;
+      color: var(--ink);
+      font: inherit;
       font-size: 1rem;
-      font-weight: 600;
-      color: var(--red-text);
+      font-weight: 700;
       cursor: pointer;
-      transition: all 0.2s ease-in-out;
+      transition: background-color 0.15s ease;
 
       &:hover {
-        background-color: rgba(220, 77, 53, 0.1);
+        background: var(--red-tint);
       }
 
       &.active {
-        background-color: var(--red-text);
+        background: var(--ink);
         color: var(--paper);
       }
-    }
-  }
 
-  .date-articles {
-    overflow: hidden;
-  }
-
-  .date-line {
-    display: flex;
-    gap: 1.5rem;
-    align-items: center;
-    color: var(--red-text);
-    margin-inline: -2rem;
-
-    .date {
-      margin-left: 0.5rem;
-      padding-left: 1.5rem;
-      background: var(--ground);
-      font-size: 1rem;
-      font-weight: 500;
-    }
-
-    @media (min-width: 576px) {
-      .date {
-        font-size: 1.25rem;
+      &:focus-visible {
+        outline: 3px solid var(--ink);
+        outline-offset: 2px;
       }
-    }
 
-    hr {
-      flex: 1;
-    }
-
-    &.only-line {
-      gap: 0;
-
-      .date {
-        margin-left: 0;
-        text-indent: -999px;
-        background: transparent;
+      @media (prefers-reduced-motion: reduce) {
+        transition: none;
       }
     }
   }
@@ -313,103 +327,194 @@ export default {
   .article-list {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(min(300px, 100%), 1fr));
-    gap: 2rem 1.5rem;
-    margin-top: 1rem;
+    gap: 2.5rem 1.75rem;
+  }
 
-    .article {
-      display: block;
-      margin-top: 1rem;
-      text-decoration: none;
-      color: var(--ink);
+  .card {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
 
-      &:hover {
-        h5 {
-          text-decoration: underline;
-        }
-      }
+  .kicker {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    color: var(--red-text);
+    font-size: 0.875rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
 
-      img {
-        box-sizing: border-box;
-        display: block;
-        aspect-ratio: 16/9;
-        width: 100%;
-        height: auto;
-        object-fit: cover;
-        background-color: #fff;
-        border: 1px solid var(--red);
-        border-radius: 4px;
-      }
+    .ornament {
+      flex-shrink: 0;
+      color: var(--red);
+    }
 
-      small {
-        display: block;
-        font-size: 0.8rem;
-        font-style: italic;
-        opacity: 0.8;
-        margin-block: 0.5em;
-      }
+    .rule {
+      flex: 1;
+      height: 1px;
+      background: var(--ink);
+      opacity: 0.25;
+    }
 
-      h5 {
-        font-size: 1.2rem;
-        font-weight: 500;
-        margin-block: 0.7em;
-      }
-
-      p {
-        font-size: 1rem;
-        margin-block: 0.7rem;
-      }
-
-      .line-clamp-4 {
-        display: -webkit-box;
-        -webkit-box-orient: vertical;
-        -webkit-line-clamp: 4;
-        line-clamp: 4;
-        overflow: hidden;
-      }
-
-      .medium-and-date {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        margin-bottom: 0.4rem;
-
-        p {
-          display: flex;
-          gap: 0.33rem;
-          align-items: center;
-          margin: 0;
-
-          .favicon {
-            display: block;
-            overflow: hidden;
-            width: 22px;
-            aspect-ratio: 1/1;
-            background: #fff;
-            border: 1px solid #fff;
-            border-radius: 0;
-          }
-        }
-      }
+    &.is-spacer .date {
+      visibility: hidden;
     }
   }
 
+  .card-link {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    color: var(--ink);
+    text-decoration: none;
+
+    &:hover h3 {
+      text-decoration: underline;
+      text-decoration-color: var(--red-text);
+      text-decoration-thickness: 2px;
+    }
+
+    &:focus-visible {
+      outline: 3px solid var(--ink);
+      outline-offset: 4px;
+      border-radius: 12px;
+    }
+  }
+
+  .thumb {
+    position: relative;
+    aspect-ratio: 16 / 9;
+    overflow: hidden;
+    background: var(--ink);
+    border: 2px solid var(--ink);
+    border-radius: 12px;
+    box-sizing: border-box;
+
+    .thumb-img {
+      display: block;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .thumb-bg {
+      position: absolute;
+      inset: -10%;
+      width: 120%;
+      height: 120%;
+      object-fit: cover;
+      filter: blur(14px);
+      opacity: 0.85;
+    }
+
+    .thumb-portrait {
+      position: absolute;
+      left: 50%;
+      top: 0;
+      height: 100%;
+      width: auto;
+      transform: translateX(-50%);
+    }
+  }
+
+  .tag {
+    position: absolute;
+    top: 0.6rem;
+    left: 0.6rem;
+    padding: 3px 10px;
+    border: 2px solid transparent;
+    border-radius: 999px;
+    font-size: 0.8125rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .tag-ppp {
+    background: var(--ink);
+    border-color: var(--paper);
+    color: var(--paper);
+  }
+
+  .tag-talk {
+    background: var(--red-text);
+    border-color: var(--paper);
+    color: var(--paper);
+  }
+
+  .tag-short {
+    background: var(--paper);
+    border-color: var(--ink);
+    color: var(--ink);
+  }
+
+  .tag-new {
+    left: auto;
+    right: 0.6rem;
+    background: var(--red-text);
+    border-color: var(--paper);
+    color: var(--paper);
+  }
+
+  h3 {
+    margin: 0.25rem 0 0;
+    font-weight: 700;
+    font-size: 1.75rem;
+    line-height: 1.05;
+  }
+
+  .excerpt {
+    margin: 0;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    overflow: hidden;
+    color: var(--ink-soft);
+    font-size: 0.9375rem;
+    line-height: 1.5;
+  }
+
+  .meta {
+    margin: 0;
+    color: var(--ink-soft);
+    font-size: 0.875rem;
+  }
+
   .more-articles {
-    margin-top: 2rem;
+    margin-top: 3rem;
     text-align: center;
 
     button {
-      background-color: var(--red-text);
-      border: none;
-      border-radius: 4px;
-      padding: 0.5rem 2rem;
-      font-size: 1.25rem;
-      font-weight: 600;
+      padding: 0.875rem 2.5rem;
+      background: var(--red-text);
+      border: 2px solid var(--ink);
+      border-radius: 12px;
+      box-shadow: 4px 4px 0 var(--ink);
       color: var(--paper);
+      font: inherit;
+      font-size: 1.1875rem;
+      font-weight: 800;
       cursor: pointer;
-      transition: background-color 0.2s ease-in-out;
+      transition:
+        transform 0.12s ease,
+        box-shadow 0.12s ease;
 
-      &:hover {
-        background-color: #ff5ccb;
+      &:hover,
+      &:focus-visible {
+        transform: translate(-2px, -2px);
+        box-shadow: 6px 6px 0 var(--ink);
+      }
+
+      &:focus-visible {
+        outline: 3px solid var(--ink);
+        outline-offset: 3px;
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        transition: none;
       }
     }
   }

@@ -52,22 +52,17 @@
             </div>
           </template>
         </div>
-        <div class="fine-print">
-          <p class="disclaimer">
-            Redna finančna podpora pokriva stroške programske in druge opreme,
-            predvsem pa prinaša motivacijo za nadaljnje ustvarjanje vsebin in
-            razvoj platforme. Za spletno doniranje trenutno skrbi
-            <a
-              href="https://danesjenovdan.si"
-              target="_blank"
-              rel="noopener noreferrer"
-              >Danes je nov dan</a
-            >.
-          </p>
-          <a class="link" href="#" @click.prevent="cancelSupport"
-            >Prekini podporo</a
-          >
-        </div>
+        <p class="disclaimer">
+          Redna finančna podpora pokriva stroške programske in druge opreme,
+          predvsem pa prinaša motivacijo za nadaljnje ustvarjanje vsebin in
+          razvoj platforme. Za spletno doniranje trenutno skrbi
+          <a
+            href="https://danesjenovdan.si"
+            target="_blank"
+            rel="noopener noreferrer"
+            >Danes je nov dan</a
+          >.
+        </p>
         <div v-if="customAmount && customAmount > 0" class="continue-button">
           <button
             type="button"
@@ -136,10 +131,6 @@ export default {
           `/${this.medium.slug}/podpri?${this.queryString(this.customAmount)}`,
         );
       }
-    },
-    cancelSupport() {
-      // eslint-disable-next-line no-alert
-      prompt("Prosimo kontaktirajte nas na e-naslovu:", "novdan@djnd.si");
     },
   },
 };
@@ -325,36 +316,16 @@ export default {
     }
   }
 
-  .fine-print {
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
+  .disclaimer {
+    margin: 0;
+    max-width: 780px;
+    font-size: 1rem;
+    line-height: 1.55;
+    color: var(--ink-soft);
 
-    @media (min-width: 768px) {
-      flex-direction: row;
-      justify-content: space-between;
-      align-items: flex-start;
-      gap: 2rem;
-    }
-
-    .disclaimer {
-      margin: 0;
-      max-width: 780px;
-      font-size: 1rem;
-      line-height: 1.55;
-      color: var(--ink-soft);
-
-      a {
-        color: var(--red-text);
-        font-weight: 700;
-      }
-    }
-
-    .link {
-      flex-shrink: 0;
-      color: var(--ink-soft);
-      font-size: 0.9375rem;
-      text-decoration: underline;
+    a {
+      color: var(--red-text);
+      font-weight: 700;
     }
   }
 
