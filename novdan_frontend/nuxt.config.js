@@ -68,18 +68,6 @@ export default defineNuxtConfig({
         },
         { rel: "apple-touch-icon", href: "/apple-touch-icon.png" },
         { rel: "stylesheet", href: "/fonts/selfhosted.css" },
-        {
-          rel: "alternate",
-          type: "application/rss+xml",
-          title: "RSS feed",
-          href: "https://denarnica.novdan.si/articles/feed/rss/",
-        },
-        {
-          rel: "alternate",
-          type: "application/atom+xml",
-          title: "Atom feed",
-          href: "https://denarnica.novdan.si/articles/feed/atom/",
-        },
       ],
       script: [
         {
